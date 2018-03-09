@@ -1,5 +1,6 @@
 package com.example.jingj;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -22,6 +23,8 @@ public class QuizActivity extends AppCompatActivity {
 
     private static final String TAG = "QuizActivity";
     private static final String KEY_INDEX = "index";
+    private static final int REQUEST_CODE_CHEAT = 0;
+    private static final String CHEAT = "cheat_or_not";
 
     private Question[] mQuestionBank = new Question[] {
             new Question(R.string.question_text, true),
@@ -34,6 +37,7 @@ public class QuizActivity extends AppCompatActivity {
 
     private int mCurrentIndex = 0;
     private int mTrueAnswer = 0;
+    private boolean mIsCheater;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,13 +47,14 @@ public class QuizActivity extends AppCompatActivity {
 
         if (savedInstanceState != null){
             mCurrentIndex = savedInstanceState.getInt(KEY_INDEX, 0);
+            mIsCheater = savedInstanceState.getBoolean(CHEAT);
         }
 
         mQuestionTextView = findViewById(R.id.question_text_view);
         mQuestionTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                mCurrentIndex = (mCurrentIndex + 1) % mQuestionBank.length;
+                mCurrentIndex = (mCurrentIndex + 1) % mQuestionBank.length;
                 updateQuestion();
             }
         });
@@ -79,6 +84,7 @@ public class QuizActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 mCurrentIndex = (mCurrentIndex + 1) % mQuestionBank.length;
+                mIsCheater = false;
                 updateQuestion();
             }
         });
@@ -105,7 +111,7 @@ public class QuizActivity extends AppCompatActivity {
             public void onClick(View view) {
                 boolean answerIsTrue = mQuestionBank[mCurrentIndex].isAnswerTrue();
                 Intent intent = CheatActivity.newIntent(QuizActivity.this, answerIsTrue);
-                startActivity(intent);
+                startActivityForResult(intent, REQUEST_CODE_CHEAT);
             }
         });
 
@@ -123,11 +129,15 @@ public class QuizActivity extends AppCompatActivity {
     private void checkAnswer(boolean userPressedTrue){
         boolean answerIsTrue = mQuestionBank[mCurrentIndex].isAnswerTrue();
         int messageResId = 0;
-        if (answerIsTrue == userPressedTrue) {
-            messageResId = R.string.correct_toast;
-            mTrueAnswer += 1;
-        } else {
-            messageResId = R.string.incorrect_toast;
+        if (mIsCheater){
+            messageResId = R.string.judgment_toast;
+        }else {
+            if (answerIsTrue == userPressedTrue) {
+                messageResId = R.string.correct_toast;
+                mTrueAnswer += 1;
+            } else {
+                messageResId = R.string.incorrect_toast;
+            }
         }
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show();
         if (mCurrentIndex + 1 == mQuestionBank.length){
@@ -135,6 +145,27 @@ public class QuizActivity extends AppCompatActivity {
             Toast.makeText(this, grade, Toast.LENGTH_SHORT).show();
             mNextButton.setClickable(false);
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+        if (resultCode != Activity.RESULT_OK){
+            return;
+        }
+        if (requestCode == REQUEST_CODE_CHEAT){
+            if (data == null){
+                return;
+            }
+            mIsCheater = CheatActivity.wasAnswerShown(data);
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle savedInstanceState){
+        super.onSaveInstanceState(savedInstanceState);
+        Log.i(TAG, "onSaverInstanceState");
+        savedInstanceState.putInt(KEY_INDEX, mCurrentIndex);
+        savedInstanceState.putBoolean(CHEAT, mIsCheater);
     }
 
     @Override
@@ -153,13 +184,6 @@ public class QuizActivity extends AppCompatActivity {
     protected void onPause(){
         super.onPause();
         Log.d(TAG, "onPause() called");
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle savedInstanceState){
-        super.onSaveInstanceState(savedInstanceState);
-        Log.i(TAG, "onSaverInstanceState");
-        savedInstanceState.putInt(KEY_INDEX, mCurrentIndex);
     }
 
     @Override
