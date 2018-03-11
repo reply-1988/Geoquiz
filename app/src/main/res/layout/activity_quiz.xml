@@ -35,6 +35,11 @@
         android:layout_height="wrap_content"
         android:text="@string/cheat_button"/>
 
+    <TextView
+        android:id="@+id/rest_times"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -54,5 +59,11 @@
             android:src="@drawable/arrow_right"
             android:contentDescription="@string/next_button"/>
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/version_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="24dp"/>
 
 </LinearLayout>

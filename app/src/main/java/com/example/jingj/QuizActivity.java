@@ -2,6 +2,7 @@ package com.example.jingj;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -20,6 +21,8 @@ public class QuizActivity extends AppCompatActivity {
     private ImageButton mPreviousButton;
     private Button mCheatButton;
     private TextView mQuestionTextView;
+    private TextView mVersionTextView;
+    private TextView mRestTimesTextView;
 
     private static final String TAG = "QuizActivity";
     private static final String KEY_INDEX = "index";
@@ -38,6 +41,7 @@ public class QuizActivity extends AppCompatActivity {
     private int mCurrentIndex = 0;
     private int mTrueAnswer = 0;
     private boolean mIsCheater;
+    private int mCheatTimes = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,13 +113,27 @@ public class QuizActivity extends AppCompatActivity {
         mCheatButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                boolean answerIsTrue = mQuestionBank[mCurrentIndex].isAnswerTrue();
-                Intent intent = CheatActivity.newIntent(QuizActivity.this, answerIsTrue);
-                startActivityForResult(intent, REQUEST_CODE_CHEAT);
+                if (mCheatTimes < 3){
+                    boolean answerIsTrue = mQuestionBank[mCurrentIndex].isAnswerTrue();
+                    Intent intent = CheatActivity.newIntent(QuizActivity.this, answerIsTrue);
+                    startActivityForResult(intent, REQUEST_CODE_CHEAT);
+                    mCheatTimes += 1;
+                    mRestTimesTextView.setText("剩余欺骗次数：" + (3 - mCheatTimes));
+                }
+                else {
+                    mCheatButton.setVisibility(View.INVISIBLE);
+                }
             }
         });
 
         updateQuestion();
+
+        mVersionTextView = findViewById(R.id.version_text);
+        mVersionTextView.setText("API LEVEL " + Build.VERSION.SDK_INT);
+
+        mRestTimesTextView = findViewById(R.id.rest_times);
+        mRestTimesTextView.setText("剩余欺骗次数： " + (3-mCheatTimes));
+
 
     }
 
